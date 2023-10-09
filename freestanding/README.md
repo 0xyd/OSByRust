@@ -4,7 +4,7 @@ A binary that does not depend on operating systems. Things like standard library
 ## Things to do
 1. Disable Standard Library
 1. Implement Own Panic
-1. Language Item `eh_personality`
+1. Language Items
 
 ## Disable Standard Library
 To disable standard library, `no_std` attribute is added into the `main.rs`. After that, the `println!` macro is no longer usable since it is part of the standard library.
@@ -23,8 +23,31 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 ``` 
 
-## Language Item `eh_personality`
-Language items are required by rust compiler because rust need to know how to deal with types. Hence, it is often for us to add `trait` on types. 
+## Language Item
+Language items are required by rust compiler because rust needs to know how to deal with types. Hence, it is often for us to add `trait` on types. However, customizing language items are not recommanded due to their lack of stability (ex: no type checked). 
+
+### Language Item: `eh_personality`
+`eh_personality` marks function with stack unwinding so that memory are freed when the destructors of functions are invoked. The destructors are raised when an exception happens as well. When an exception occurs, the stack will be unwinded by functions' destructors and the parent thread can get the `panic` info and continue. However, the stack unwinding is heavily relied on implementation of OS and we have to disable it if we want to build a standalone rust. To disable the unwinding stack, we assign panic to abort in `Cargo.toml` file. Note that panic for dev and released both have to be aborted.
+
+```rust
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+```
+
+### Language Item: `start`
+After disabling stack unwinding, the compiler still complains that it needs `start` item.
+```bash
+cargo build
+   Compiling freestanding v0.1.0 (/Users/yudelin/projects/OSByRust/freestanding)
+error: requires `start` lang_item
+```
+Before a binary starts, a runtime system is on to prepare everything the upcoming binary needs. For the rust binary, it starts with a C runtime library called `crt0` which is dedicated to set up the environment for C such as creating stacks and placing the arguments to the registers. `crt0` is the utmost start of a rust binary. After `crt0`'s utmost beginning, the rust's runtime which is marked by `start` item is finally triggered. The rust runtime only handles several things like stack overflow guard and backtracing on panic. Once those are done, it calls `main` function. 
+
+Both `crt0` and rust runtime are not existed in standalone scenario, so it is necessary to overwrite an entry point to surrogate `crt0`'s job. Overwriting a `start` item is not necessary in our case.
 
 ## References
+1. [Freestanding Rust Binary](https://os.phil-opp.com/freestanding-rust-binary/)
 1. [The Rust Core Library](https://doc.rust-lang.org/nightly/core/index.html)
