@@ -60,10 +60,28 @@ pub extern "C" fn _start() -> ! {
 ```
 The attribute `no_mangle` tells the compiler not to do the name mangling for this function. The reason is that `_start` is the default entry point name for many systems. Without `no_mangle` attribute, the compiler will rename `_start` into other compiler's defined format. keyword `extern "C"` tells the compiler to invoke this function with C calling convention. We use type never `!` again because this is the beginning of the whole system and there is nothing it needs to return to.
 
-## Linker Errors
-In the previous section, we admonish the compiler that this build is a standalone binary and shall not be invoked with C runtime. But the operating system doesn't know that, its linker then try to link every required for a normal build. The solution is to add some options for its linker to tell OS what this binary build is for. In our case, our build is a bare-metal.
+## Handle Linker Errors
+In the previous section, we admonish the compiler that this build is a standalone binary and shall not be invoked with C runtime. But the operating system doesn't know that, its linker then try to link every required for a normal build. The solution is to add some options for its linker to tell OS what this binary build is for. 
+
+In default, rust build system only install the standard library for the architecture and operationg system our current systems are running. Luckily, Rust has a convenient [cross-compilation](https://rust-lang.github.io/rustup/cross-compilation.html) features allow developers to add the wanting platforms by command `rustup target add <arch><sub>-<vendor>-<sys>-<env>`. The details are following:
+* arch (architecture): `x_86`, `i386`, `arm`, `thumb`, etc.
+* sub: `v5`, `v6m`, `v7a` `v7m` (For ARM) etc.
+* vendor: `pc`, `apple`, `nvidia`, `ibm` etc.
+* sys (operating system): `none`, `linux`, `win32`, `darwin`, `cuda` etc.
+* env: `eabi`, `gnu`, `android`, `macho`, `elf` etc.
+
+For instance: if we want to build a bare-metal running on Cortex-M architecture with DSP extension, we need to add target `thumbv7em-none-eabihf` into `rustup` toolchain.
+```bash
+rustup target add thumbv7em-none-eabihf
+``` 
+After the command is executed, the target will be downloaded and installed. Now we can use the cargo build to do the cross-platform compilation:
+```bash
+cargo build --target thumbv7em-none-eabihf
+```
 
 ## References
 1. [Freestanding Rust Binary](https://os.phil-opp.com/freestanding-rust-binary/)
 1. [The Rust Core Library](https://doc.rust-lang.org/nightly/core/index.html)
 1. [Name mangling](https://en.wikipedia.org/wiki/Name_mangling)
+1. [Target Triple](https://clang.llvm.org/docs/CrossCompilation.html#target-triple)
+1. [ARM M Profile](https://www.arm.com/architecture/cpu/m-profile)
