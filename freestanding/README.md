@@ -28,7 +28,7 @@ fn panic(_info: &PanicInfo) -> ! {
 Language items are required by rust compiler because rust needs to know how to deal with types. Hence, it is often for us to add `trait` on types. However, customizing language items are not recommanded due to their lack of stability (ex: no type checked). 
 
 ### Language Item: `eh_personality`
-`eh_personality` marks function with stack unwinding so that memory are freed when the destructors of functions are invoked. The destructors are raised when an exception happens as well. When an exception occurs, the stack will be unwinded by functions' destructors and the parent thread can get the `panic` info and continue. However, the stack unwinding is heavily relied on implementation of OS and we have to disable it if we want to build a standalone rust. To disable the unwinding stack, we assign panic to abort in `Cargo.toml` file. Note that panic for dev and released both have to be aborted.
+`eh_personality` marks function with [stack unwinding](https://www.bogotobogo.com/cplusplus/stackunwinding.php) so that memory are freed when the destructors of functions are invoked. The destructors are raised when an exception happens as well. When an exception occurs, the stack will be unwinded by functions' destructors and the parent thread can get the `panic` info and continue. However, the stack unwinding is heavily relied on implementation of OS and we have to disable it if we want to build a standalone rust. To disable the unwinding stack, we assign panic to abort in `Cargo.toml` file. Note that panic for dev and released both have to be aborted.
 
 ```rust
 [profile.dev]
@@ -85,3 +85,4 @@ cargo build --target thumbv7em-none-eabihf
 1. [Name mangling](https://en.wikipedia.org/wiki/Name_mangling)
 1. [Target Triple](https://clang.llvm.org/docs/CrossCompilation.html#target-triple)
 1. [ARM M Profile](https://www.arm.com/architecture/cpu/m-profile)
+1. [Stack Unwinding](https://www.bogotobogo.com/cplusplus/stackunwinding.php)

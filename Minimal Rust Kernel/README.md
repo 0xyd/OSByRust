@@ -51,7 +51,7 @@ The information told us that we have nightly installed and it is currently overw
 
 ### Customize you own target
 
-Rust supports our own target by adding a customized JSON file. The example the author addressed is:
+Rust supports our own target by adding a customized JSON file. The example the author addressed for a x86-64 is:
 ```json
 {
     "llvm-target": "x86_64-unknown-none",
@@ -73,10 +73,19 @@ Rust supports our own target by adding a customized JSON file. The example the a
 * `data-layout`: This attribute defines the memory layout. Each specification is separated by "-". We have the following specifications here:
     * "e": little-endian form.
     * "m:e": ELF mangling
-    * "i64:64": The alignment of an integer type is 64 bit (The first 64). The second 64 is the ABI  
-
+    * "i64:64": The alignment of an integer type is 64 bit (The first 64). The second 64 is the ABI. (Note: I don't know what exactly ABI means here.)
+    * "f80:128": The alignment of a float type (f<size>:<abi>[:<pref>]).
+    * "n8:18:32:64": Specifies a set of interger widths for target CPU. Ex: For PowerPC 64, it is n32:64; for x86-64, it is n8:16:32:64.
+    * "S128": Specifies the natural alignment of the stack in bits (Note: I don't understand what it is about.)
+* `linker-flavor`: "ld.lld" is the alias of LLD in the system and LLD is the LLVM Linker. We choose this linker instead of the default one operating system is using. The reason for this choice is due LLVM Linker's cross-platform property.
+* `linker`: We specify our linker to rust's LLD Linker: "rust-lld".
+* `panic-strategy`: Set the panic-strategy to "abort" instead of the default which is stack unwinding since our target has implemented stack unwinding yet. This takes the same affect as setting up the `panic=abort` in the Cargo.toml file.
+* `disable-redzone`: `Red Zone` is an optimization specifing a fixed-size of memories (size is depending on the OSes) below the current stack pointer in functions which don't call other functions. Red Zone preserves the values for a running thread before it is pre-empted and save its time to retrieve those values after it is re-invoked. However, this causes the problem when our target uses exceptions and hardware interrupts since their memory layout overlaps with Red Zone. The overlapping leads Red Zone to clobber the frames of interrupts and execptions. The clobbering will cause some bugs that are difficult to find so it is better we disable this feature via `disable-redzone: true`.
+* `features`: 
 
 ### Build
+
+
 
 ## Reference
 1. [A Minimal Rust Kernel](https://os.phil-opp.com/minimal-rust-kernel/)
@@ -94,3 +103,10 @@ Rust supports our own target by adding a customized JSON file. The example the a
 1. [Data Layout](https://llvm.org/docs/LangRef.html#data-layout)
 1. [Endianness](https://en.wikipedia.org/wiki/Endianness)
 1. [Application binary Interface](https://en.wikipedia.org/wiki/Application_binary_interface)
+1. [Data Layout](https://llvm.org/docs/LangRef.html#data-layout)
+1. [The LLVM Linkder](https://lld.llvm.org/)
+1. [Red zone](https://en.wikipedia.org/wiki/Red_zone_(computing))
+1. [Disable the Red Zone](https://os.phil-opp.com/red-zone/)
+1. [Why do we need stack allocation when we have a red zone](https://stackoverflow.com/questions/37941779/why-do-we-need-stack-allocation-when-we-have-a-red-zone)
+1. [Single Instruction, Multiple Data (SIMD)](https://en.wikipedia.org/wiki/Single_instruction,_multiple_data)
+1. [Flynn's Taxonomy](https://en.wikipedia.org/wiki/Flynn%27s_taxonomy)
